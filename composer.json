@@ -1,0 +1,28 @@
+{
+    "name": "temayud/addressfias",
+    "description": "",
+    "keywords": [
+        "ФИАС",
+        "ГАР"
+    ],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "AddressFIAS\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Artem Yudaev",
+            "email": "tema.yud@gmail.com",
+            "homepage": "https://github.com/TemaYud"
+        }
+    ],
+    "require": {
+        "php": "^7.4.29 || ^8.0",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
