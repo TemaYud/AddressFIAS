@@ -6,6 +6,7 @@ ini_set('log_errors', true);
 
 require_once('vendor' . DIRECTORY_SEPARATOR . 'autoload.php');
 
-$mdl = new \AddressFIAS\Updater();
-#$mdl->upgradeFull();
-$mdl->upgradeDelta();
+$updater = new \AddressFIAS\Updater();
+#$updater->upgradeFull();
+$updater->setProcessFileDir(__DIR__ . DIRECTORY_SEPARATOR . 'tmp');
+$updater->upgradeDelta();

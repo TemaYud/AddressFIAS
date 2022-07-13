@@ -1,75 +1,82 @@
 <?php
 namespace AddressFIAS\Updater\Downloader;
 
-use AddressFIAS\Exception\UpdaterException;
+use AddressFIAS\Exception\DownloaderException;
 
 class DownloaderCurl extends DownloaderBase {
 
+	protected $options = [
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_FOLLOWLOCATION => true,
+		CURLOPT_CONNECTTIMEOUT => 10,
+		CURLOPT_SSL_VERIFYHOST => false,
+		CURLOPT_SSL_VERIFYPEER => false,
+	];
+
 	protected function downloadFile($url, $file){
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_HEADER, false);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-		$result = curl_exec($ch);
-
-		if (false === $result){
-			throw new UpdaterException('cURL error: ' . curl_error($ch) . ' (' . curl_errno($ch) . ').');
+		$fh = @fopen($file, 'wb');
+		if (false === $fh){
+			throw new DownloaderException('File open error: \'' . $file . '\'.');
 		}
 
-		curl_close($ch);
-
-		if (null == ($result = json_decode($result, true))){
-			throw new UpdaterException('JSON decode error: ' . json_last_error() . '.');
-		}
-
-		/*usort($result, function($a, $b){
-			if ($a['VersionId'] == $b['VersionId']){
-				return 0;
+		$result = $this->sendRequest($url, [
+			CURLOPT_TIMEOUT => 60 * 60,
+			CURLOPT_HEADER => false,
+			CURLOPT_FILE => $fh,
+		], function($ch, $response){
+			if (null == ($response = json_decode($response, true))){
+				throw new DownloaderException('JSON decode error: ' . json_last_error() . '.');
 			}
-			return ($a['VersionId'] < $b['VersionId']) ? -1 : 1;
-		});*/
+
+			return true;
+		});
+
+		fclose($fh);
 
 		return $result;
 	}
 
-	protected function checkFilesize($filesize, $url){
-		$ch = curl_init();
-
-        if (false === $ch){
-            throw new Exception();
-        }
-
-		$options = [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_CONNECTTIMEOUT => 30,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_FILE => $this->openLocalFile($localFile, 'wb'),
-			CURLOPT_SSL_VERIFYHOST => false,
-			CURLOPT_SSL_VERIFYPEER => false,
+	protected function checkExistsFilesize($filesize, $url){
+		$urlFilesize = $this->sendRequest($url, [
+			CURLOPT_TIMEOUT => 30,
 			CURLOPT_HEADER => true,
 			CURLOPT_NOBODY => true,
-        ];
+		], function($ch, $response){
+			return curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+		});
+
+		return ($filesize == $urlFilesize);
+	}
+
+	protected function sendRequest($url, array $options, $resultCallback){
+		$ch = curl_init();
+
+		if (false === $ch){
+			throw new DownloaderException('Error initializing cURL');
+		}
+
+		$options = array_replace($this->options, $options);
+
+		$options[CURLOPT_URL] = $url;
 
 		curl_setopt_array($ch, $options);
 
-		$result = curl_exec($ch);
+		$response = curl_exec($ch);
 
-		if (false === $result){
-			throw new Exception('cURL error: ' . curl_error($ch) . ' (' . curl_errno($ch) . ').');
+		if (false === $response){
+			throw new DownloaderException('cURL error: ' . curl_error($ch) . ' (' . curl_errno($ch) . ').');
 		}
 
-		$urlFilesize = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+		$httpStatusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		if ($httpStatusCode < 200 || $httpStatusCode >= 300){
+			throw new DownloaderException('Wrong HTTP status code: ' . $httpStatusCode . '.');
+		}
+
+		$result = call_user_func($resultCallback, $ch, $response);
 
 		curl_close($ch);
 
-		return ($filesize == $urlFilesize);
+		return $result;
 	}
 
 }

@@ -115,17 +115,9 @@ class Updater {
 		$this->getVersionStorage()->setCurrentVersionId($farr['VersionId'], $farr);
 	}
 
-	protected function downloadFile($fileURL, array $farr){
-		$filepath = $this->getProcessFileDir() . DIRECTORY_SEPARATOR . 'addressfias_' . $farr['VersionId'] . '.' . pathinfo($fileURL)['extension'];
-		if (!is_file($filepath)) #
-		$this->getDownloader()->download($fileURL, $filepath);
-
-		return $filepath;
-	}
-
 	public function processGarFileDelta(array $farr){
-		$filepath = $this->downloadFile($farr['GarXMLDeltaURL'], $farr);
-		$filepath = $this->downloadFile($farr['GarXMLDeltaURL'], $farr);
+		$filepath = $this->getProcessFileDir() . DIRECTORY_SEPARATOR . 'addressfias_' . $farr['VersionId'] . '.' . pathinfo($farr['GarXMLDeltaURL'])['extension'];
+		$this->getDownloader()->download($farr['GarXMLDeltaURL'], $filepath);
 
 		var_dump($farr, $filepath);
 	}

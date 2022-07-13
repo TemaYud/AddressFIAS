@@ -5,7 +5,7 @@ abstract class DownloaderBase {
 
 	public function download($url, $file, $checkExistsFile = true){
 		if (is_file($file)){
-			if ($checkExistsFile && $this->checkFilesize($this->getLocalFilesize($file), $url)){
+			if ($checkExistsFile && $this->checkExistsFile($file, $url)){
 				return $file;
 			}
 
@@ -22,6 +22,10 @@ abstract class DownloaderBase {
 
 	abstract protected function downloadFile($url, $file);
 
-	abstract protected function checkFilesize($localFilesize, $url);
+	protected function checkExistsFile($file, $url){
+		return $this->checkExistsFilesize($this->getLocalFilesize($file), $url);
+	}
+
+	abstract protected function checkExistsFilesize($localFilesize, $url);
 
 }
