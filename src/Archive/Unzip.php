@@ -1,12 +1,16 @@
 <?php
-namespace AddressFIAS\Updater\Archive;
+namespace AddressFIAS\Archive;
 
-use AddressFIAS\Updater\Archive\Base;
+use AddressFIAS\Archive\Base;
 
 class Unzip extends Base {
 
 	public function open($file){
-		return is_file($this->file);
+		if (!is_file($this->file)){
+			throw new ArchiveException('No such file.');
+		}
+
+		return true;
 	}
 
 	public function close(){

@@ -1,10 +1,10 @@
 <?php
-namespace AddressFIAS\Updater\Archive;
+namespace AddressFIAS\Archive;
 
-use AddressFIAS\Updater\Archive\IArchive;
-use AddressFIAS\Exception\UpdaterArchiveException;
+use AddressFIAS\Archive\Base;
+use AddressFIAS\Exception\ArchiveException;
 
-class Rar extends IArchive {
+class Rar extends Base {
 
 	protected $arch;
 
@@ -20,7 +20,7 @@ class Rar extends IArchive {
 
 			return true;
 		} catch (\RarException $e){
-			throw new UpdaterArchiveException($e->getMessage(), $e->getCode(), $e);
+			throw new ArchiveException($e->getMessage(), $e->getCode(), $e);
 		}
 
 		return false;
@@ -31,7 +31,7 @@ class Rar extends IArchive {
 			try {
 				return $this->arch->close();
 			} catch (\RarException $e){
-				throw new UpdaterArchiveException($e->getMessage(), $e->getCode(), $e);
+				throw new ArchiveException($e->getMessage(), $e->getCode(), $e);
 			}
 		}
 		return false;
@@ -53,7 +53,7 @@ class Rar extends IArchive {
 				}
 				return $result;
 			} catch (\RarException $e){
-				throw new UpdaterArchiveException($e->getMessage(), $e->getCode(), $e);
+				throw new ArchiveException($e->getMessage(), $e->getCode(), $e);
 			}
 		}
 		return false;
@@ -66,7 +66,7 @@ class Rar extends IArchive {
 					return $entry->extract($path);
 				}
 			} catch (\RarException $e){
-				throw new UpdaterArchiveException($e->getMessage(), $e->getCode(), $e);
+				throw new ArchiveException($e->getMessage(), $e->getCode(), $e);
 			}
 		}
 		return false;

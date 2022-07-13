@@ -1,7 +1,8 @@
 <?php
-namespace AddressFIAS\Updater\Archive;
+namespace AddressFIAS\Archive;
 
-use AddressFIAS\Updater\Archive\Base;
+use AddressFIAS\Archive\Base;
+use AddressFIAS\Exception\ArchiveException;
 
 class Zip extends Base {
 
@@ -13,43 +14,43 @@ class Zip extends Base {
 		if (true !== ($r = $arch->open($this->file))){
 			switch ($r){
 				case \ZipArchive::ER_EXISTS:
-					throw new exception('File already exists.', $r);
+					throw new ArchiveException('File already exists.');
 					break;
 
 				case \ZipArchive::ER_INCONS:
-					throw new exception('Zip archive inconsistent.', $r);
+					throw new ArchiveException('Zip archive inconsistent.');
 					break;
 
 				case \ZipArchive::ER_INVAL:
-					throw new exception('Invalid argument.', $r);
+					throw new ArchiveException('Invalid argument.');
 					break;
 
 				case \ZipArchive::ER_MEMORY:
-					throw new exception('Malloc failure.', $r);
+					throw new ArchiveException('Malloc failure.');
 					break;
 
 				case \ZipArchive::ER_NOENT:
-					throw new exception('No such file.', $r);
+					throw new ArchiveException('No such file.');
 					break;
 
 				case \ZipArchive::ER_NOZIP:
-					throw new exception('Not a zip archive.', $r);
+					throw new ArchiveException('Not a zip archive.');
 					break;
 
 				case \ZipArchive::ER_OPEN:
-					throw new exception('Can\'t open file.', $r);
+					throw new ArchiveException('Can\'t open file.');
 					break;
 
 				case \ZipArchive::ER_READ:
-					throw new exception('Read error.', $r);
+					throw new ArchiveException('Read error.');
 					break;
 
 				case \ZipArchive::ER_SEEK:
-					throw new exception('Seek error.', $r);
+					throw new ArchiveException('Seek error.');
 					break;
 
 				default:
-					throw new exception('An unknown error has occurred (' . $r . ')', $r);
+					throw new ArchiveException('An unknown error has occurred (' . $r . ')');
 					break;
 			}
 		}

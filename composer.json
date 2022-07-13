@@ -19,8 +19,7 @@
         }
     ],
     "require": {
-        "php": "^7.4.29 || ^8.0",
-        "guzzlehttp/guzzle": "^7.0"
+        "php": "^7.4.29 || ^8.0"
     },
     "config": {
         "sort-packages": true

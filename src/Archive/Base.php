@@ -1,5 +1,5 @@
 <?php
-namespace AddressFIAS\Updater\Archive;
+namespace AddressFIAS\Archive;
 
 abstract class Base {
 

@@ -1,15 +1,21 @@
 <?php
 namespace AddressFIAS;
 
-use AddressFIAS\Updater\DownloadFileInfo;
-use AddressFIAS\Updater\UpdateInfo;
+use AddressFIAS\Updater\VersionsManager\VersionsManagerBase;
+use AddressFIAS\Updater\VersionsManager\VersionsManagerCurl;
+use AddressFIAS\Updater\VersionStorage\VersionStorageBase;
+use AddressFIAS\Updater\VersionStorage\VersionStorageFile;
+use AddressFIAS\Updater\Downloader\DownloaderBase;
+use AddressFIAS\Updater\Downloader\DownloaderCurl;
+use AddressFIAS\Archive\Zip;
+
 use AddressFIAS\Exception\UpdaterException;
 
 class Updater {
 
-	protected $httpClient;
-	protected $downloadFileInfo;
-	protected $updateInfo;
+	protected $versionsManager;
+	protected $versionStorage;
+	protected $downloader;
 	protected $archiveHandler;
 
 	protected $processFileDir;
@@ -24,38 +30,37 @@ class Updater {
 	public function __construct(){
 	}
 
-	public function setHttpClient(\Psr\Http\Client\ClientInterface $httpClient){
-		$this->httpClient = $httpClient;
+	public function setVersionsManager(VersionsManagerBase $versionsManager){
+		$this->versionsManager = $versionsManager;
 	}
 
-	public function getHttpClient(){
-		if (!$this->httpClient){
-			$this->setHttpClient(new \GuzzleHttp\Client());
+	public function getVersionsManager(){
+		if (!$this->versionsManager){
+			$this->setVersionsManager(new VersionsManagerCurl());
 		}
-		return $this->httpClient;
+		return $this->versionsManager;
 	}
 
-	public function setDownloadFileInfo($downloadFileInfo){
-		$this->downloadFileInfo = $downloadFileInfo;
-		$this->downloadFileInfo->setHttpClient($this->getHttpClient());
+	public function setVersionStorage(VersionStorageBase $versionStorage){
+		$this->versionStorage = $versionStorage;
 	}
 
-	public function getDownloadFileInfo(){
-		if (!$this->downloadFileInfo){
-			$this->setDownloadFileInfo(new DownloadFileInfo());
+	public function getVersionStorage(){
+		if (!$this->versionStorage){
+			$this->setVersionStorage(new VersionStorageFile());
 		}
-		return $this->downloadFileInfo;
+		return $this->versionStorage;
 	}
 
-	public function setUpdateInfo($updateInfo){
-		$this->updateInfo = $updateInfo;
+	public function setDownloader(DownloaderBase $downloader){
+		$this->downloader = $downloader;
 	}
 
-	public function getUpdateInfo(){
-		if (!$this->updateInfo){
-			$this->setUpdateInfo(new UpdateInfo());
+	public function getDownloader(){
+		if (!$this->downloader){
+			$this->setDownloader(new DownloaderCurl());
 		}
-		return $this->updateInfo;
+		return $this->downloader;
 	}
 
 	public function setArchiveHandler(\AddressFIAS\Updater\Archive\IArchive $archiveHandler){
@@ -64,7 +69,7 @@ class Updater {
 
 	public function getArchiveHandler(){
 		if (!$this->archiveHandler){
-			$this->setArchiveHandler(new UpdateInfo());
+			$this->setArchiveHandler(new Zip());
 		}
 		return $this->archiveHandler;
 	}
@@ -81,11 +86,9 @@ class Updater {
 	}
 
 	public function upgradeDelta(){
-		$updateInfo = $this->getUpdateInfo();
+		$versionId = $this->getVersionStorage()->getCurrentVersionId();
 
-		$lastVersionId = $updateInfo->getLastVersionId();
-
-		$files = $this->getDownloadFileInfo()->getAll($lastVersionId);
+		$files = $this->getVersionsManager()->getDelta($versionId);
 		if (!$files){
 			return false;
 		}
@@ -95,12 +98,12 @@ class Updater {
 				break;
 			}
 
-			$updateInfo->setLastVersionId($farr['VersionId'], $farr);
+			$this->getVersionStorage()->setCurrentVersionId($farr['VersionId'], $farr);
 		}
 	}
 
 	public function upgradeFull(){
-		$farr = $this->getDownloadFileInfo()->getLast();
+		$farr = $this->getVersionsManager()->getLast();
 		if (!$farr){
 			return false;
 		}
@@ -109,19 +112,19 @@ class Updater {
 			return false;
 		}
 
-		$this->getUpdateInfo()->setLastVersionId($farr['VersionId'], $farr);
+		$this->getVersionStorage()->setCurrentVersionId($farr['VersionId'], $farr);
 	}
 
 	protected function downloadFile($fileURL, array $farr){
 		$filepath = $this->getProcessFileDir() . DIRECTORY_SEPARATOR . 'addressfias_' . $farr['VersionId'] . '.' . pathinfo($fileURL)['extension'];
 		if (!is_file($filepath)) #
-		$this->getHttpClient()->request('GET', $fileURL, [
-			'sink' => $filepath,
-		]);
+		$this->getDownloader()->download($fileURL, $filepath);
+
 		return $filepath;
 	}
 
 	public function processGarFileDelta(array $farr){
+		$filepath = $this->downloadFile($farr['GarXMLDeltaURL'], $farr);
 		$filepath = $this->downloadFile($farr['GarXMLDeltaURL'], $farr);
 
 		var_dump($farr, $filepath);
@@ -135,8 +138,8 @@ class Updater {
 		$filepath = $this->getProcessFileDir() . DIRECTORY_SEPARATOR . $filename;
 
 		$archHandler = $this->getArchiveHandler();
-		$arch = new $archHandler(DOC_ROOT . $this->processFileDir . $filename));
-		if (false === $arch{
+		$arch = new $archHandler(DOC_ROOT . $this->processFileDir . $filename);
+		if (false === $arch){
 			throw new UpdaterException('Open archive error');
 		}
 
@@ -220,8 +223,8 @@ class Updater {
 
 					unlink(DOC_ROOT . $this->processFileDir . $basename . DS . $entryFilename);
 				}
-			}*/
-		}
+			}
+		}*/
 
 		$arch->close();
 
