@@ -120,23 +120,29 @@ class Updater {
 		return $farr['VersionId'] . '_' . $filename;
 	}
 
-	public function processGarDelta(array $farr){
+	public function processGarDelta(array $farr, ProcessorBase $processor = null){
 		$filename = $this->generateArchiveFilename($farr, 'GarXMLDeltaURL');
 		$filepath = $this->getProcessFileDir() . DIRECTORY_SEPARATOR . $filename;
 
 		$this->getDownloader()->download($farr['GarXMLDeltaURL'], $filepath);
 
-		$processor = new ProcessorGarDelta($filepath);
+		if (is_null($processor)){
+			$processor = ProcessorGarDelta::class;
+		}
+		$processor = new $processor($filepath);
 		return $processor->process();
 	}
 
-	public function processGarFull(array $farr){
+	public function processGarFull(array $farr, ProcessorBase $processor = null){
 		$filename = $this->generateArchiveFilename($farr, 'GarXMLFullURL');
 		$filepath = $this->getProcessFileDir() . DIRECTORY_SEPARATOR . $filename;
 
 		$this->getDownloader()->download($farr['GarXMLFullURL'], $filepath);
 
-		$processor = new ProcessorGarFull($filepath);
+		if (is_null($processor)){
+			$processor = ProcessorGarFull::class;
+		}
+		$processor = new $processor($filepath);
 		return $processor->process();
 	}
 
@@ -150,7 +156,7 @@ class Updater {
 				'rows_identified' => 'AddressObjectType',
 				'callback' => [$this, 'replaceAddressesSOCRBASE']
 			],
-			'AS_ADDROBJ_' => [
+			'AS_ADDR_OBJ_' => [
 				'table' => 'ADDROBJ',
 				'rows_identified' => 'Object',
 				'callback' => [$this, 'replaceAddressesADDROBJ']
