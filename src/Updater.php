@@ -7,8 +7,9 @@ use AddressFIAS\Updater\VersionStorage\VersionStorageBase;
 use AddressFIAS\Updater\VersionStorage\VersionStorageFile;
 use AddressFIAS\Updater\Downloader\DownloaderBase;
 use AddressFIAS\Updater\Downloader\DownloaderCurl;
-use AddressFIAS\Archive\Zip;
-
+use AddressFIAS\Updater\Processors\ProcessorBase;
+use AddressFIAS\Updater\Processors\ProcessorGarDelta;
+use AddressFIAS\Updater\Processors\ProcessorGarFull;
 use AddressFIAS\Exception\UpdaterException;
 
 class Updater {
@@ -16,7 +17,6 @@ class Updater {
 	protected $versionsManager;
 	protected $versionStorage;
 	protected $downloader;
-	protected $archiveHandler;
 
 	protected $processFileDir;
 
@@ -63,17 +63,6 @@ class Updater {
 		return $this->downloader;
 	}
 
-	public function setArchiveHandler(\AddressFIAS\Updater\Archive\IArchive $archiveHandler){
-		$this->archiveHandler = $archiveHandler;
-	}
-
-	public function getArchiveHandler(){
-		if (!$this->archiveHandler){
-			$this->setArchiveHandler(new Zip());
-		}
-		return $this->archiveHandler;
-	}
-
 	public function setProcessFileDir($processFileDir){
 		$this->processFileDir = $processFileDir;
 	}
@@ -94,7 +83,7 @@ class Updater {
 		}
 
 		foreach ($files as $farr){
-			if (!$this->processGarFileDelta($farr)){
+			if (!$this->processGarDelta($farr)){
 				break;
 			}
 
@@ -108,42 +97,53 @@ class Updater {
 			return false;
 		}
 
-		if (!$this->processGarFileFull($farr)){
+		if (!$this->processGarFull($farr)){
 			return false;
 		}
 
 		$this->getVersionStorage()->setCurrentVersionId($farr['VersionId'], $farr);
 	}
 
-	public function processGarFileDelta(array $farr){
-		$filepath = $this->getProcessFileDir() . DIRECTORY_SEPARATOR . 'addressfias_' . $farr['VersionId'] . '.' . pathinfo($farr['GarXMLDeltaURL'])['extension'];
-		$this->getDownloader()->download($farr['GarXMLDeltaURL'], $filepath);
+	protected function generateArchiveFilename(array $farr, $key){
+		if (!isset($farr[$key])){
+			throw new UpdaterException('Key \'' . $key . '\' is not exists in version\'s array.');
+		}
+		if (!filter_var($farr[$key], FILTER_VALIDATE_URL, FILTER_FLAG_PATH_REQUIRED)){
+			throw new UpdaterException('URL \'' . $farr[$key] . '\' is invalid or does not contain a path part.');
+		}
 
-		var_dump($farr, $filepath);
+		$filename = pathinfo($farr[$key], PATHINFO_BASENAME);
+		if (!$filename){
+			throw new UpdaterException('URL \'' . $farr[$key] . '\' does not contain a file basename.');
+		}
+
+		return $farr['VersionId'] . '_' . $filename;
 	}
 
-	public function processGarFileFull(array $farr){
-		$xmlFileURL = $farr['GarXMLFullURL'];
-
-		$basename = strftime('address_fias_updater');
-		$filename = $basename . '.zip';
+	public function processGarDelta(array $farr){
+		$filename = $this->generateArchiveFilename($farr, 'GarXMLDeltaURL');
 		$filepath = $this->getProcessFileDir() . DIRECTORY_SEPARATOR . $filename;
 
-		$archHandler = $this->getArchiveHandler();
-		$arch = new $archHandler(DOC_ROOT . $this->processFileDir . $filename);
-		if (false === $arch){
-			throw new UpdaterException('Open archive error');
-		}
+		$this->getDownloader()->download($farr['GarXMLDeltaURL'], $filepath);
 
-		$entries = $arch->getEntries();
-		if (false === $entries){
-			throw new UpdaterException('Get archive entries error');
-		}
+		$processor = new ProcessorGarDelta($filepath);
+		return $processor->process();
+	}
 
-		/*if (!is_dir(DOC_ROOT . $this->processFileDir . $basename)){
-			mkdir(DOC_ROOT . $this->processFileDir . $basename, 0755, true);
-		}
+	public function processGarFull(array $farr){
+		$filename = $this->generateArchiveFilename($farr, 'GarXMLFullURL');
+		$filepath = $this->getProcessFileDir() . DIRECTORY_SEPARATOR . $filename;
 
+		$this->getDownloader()->download($farr['GarXMLFullURL'], $filepath);
+
+		$processor = new ProcessorGarFull($filepath);
+		return $processor->process();
+	}
+
+
+
+
+	public function processGarFileFull(array $farr){
 		$files2tbls = [
 			'AS_SOCRBASE_' => [
 				'table' => 'SOCRBASE',
@@ -216,14 +216,12 @@ class Updater {
 					unlink(DOC_ROOT . $this->processFileDir . $basename . DS . $entryFilename);
 				}
 			}
-		}*/
-
-		$arch->close();
-
-		rmdir(DOC_ROOT . $this->processFileDir . $basename . DS);
-		unlink(DOC_ROOT . $this->processFileDir . $filename);
+		}
 
 		return true;
+	}
+
+	public function getProcessors(){
 	}
 
 	public function createUpdateTable($tbl){

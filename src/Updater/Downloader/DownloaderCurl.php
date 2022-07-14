@@ -16,14 +16,14 @@ class DownloaderCurl extends DownloaderBase {
 	protected function downloadFile($url, $file){
 		$fh = @fopen($file, 'wb');
 		if (false === $fh){
-			throw new DownloaderException('File open error: \'' . $file . '\'.');
+			throw new DownloaderException('Create file error: \'' . $file . '\'.');
 		}
 
 		$result = $this->sendRequest($url, [
 			CURLOPT_TIMEOUT => 60 * 60,
 			CURLOPT_HEADER => false,
 			CURLOPT_FILE => $fh,
-		], function($ch, $response){
+		], static function($ch, $response){
 			if (null == ($response = json_decode($response, true))){
 				throw new DownloaderException('JSON decode error: ' . json_last_error() . '.');
 			}
@@ -41,7 +41,7 @@ class DownloaderCurl extends DownloaderBase {
 			CURLOPT_TIMEOUT => 30,
 			CURLOPT_HEADER => true,
 			CURLOPT_NOBODY => true,
-		], function($ch, $response){
+		], static function($ch, $response){
 			return curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
 		});
 
