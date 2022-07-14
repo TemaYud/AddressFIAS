@@ -3,6 +3,7 @@ namespace AddressFIAS\Updater\Processors;
 
 use AddressFIAS\Archive\ArchiveBase;
 use AddressFIAS\Archive\ArchiveZip;
+use AddressFIAS\Updater\Processors\Entries\EntryBase;
 use AddressFIAS\Exception\ProcessorException;
 
 abstract class ProcessorBase {
@@ -61,35 +62,28 @@ abstract class ProcessorBase {
 		}
 
 		try {
-			$files2processors = $this->getFileProcessors();
-			/*uksort($files2processors, static function($a, $b){
-				$a = strlen($a);
-				$b = strlen($b);
+			$entryFiles = array_map(function($earr){
+				return $earr['name'];
+			}, $entries);
 
-				if ($a == $b){
-					return 0;
+			$entryProcessors = $this->getEntryProcessors();
+			$fs2p = [];
+			foreach ($entryProcessors as $entryMask => $processor){
+				$fs = array_filter($entryFiles, function($efile) use($entryMask){
+					return (preg_match('#' . $entryMask . '#ui', $efile) > 0);
+				});
+
+				if ($fs){
+					$fs2p[] = [
+						'files' => $fs,
+						'processor' => $processor,
+					];
+
+					$entryFiles = array_diff($entryFiles, $fs);
 				}
-
-				return ($a < $b) ? 1 : -1;
-			});*/
-
-			foreach ($entries as $entry){
-				//$entryFilename = basename($entry->getName());
-				$entryFilename = basename($entry['name']);
-
-				foreach ($files2processors as $f => $p){
-					if ($this->cmpEntryFileProcessor($f, $entryFilename)){
-						if (!$arch->extractEntriy($entry['name'], $this->getExtractDir())){
-							throw new ProcessorException('Extract file error. Archive: \'' . $this->archiveFile . '\'. File: \'' . $entry['name'] . '\'.');
-						}
-
-						$p;
-
-						break;
-					}
-				}
-				var_dump($entryFilename);
 			}
+
+			var_dump($fs2p);
 		} catch (\Throwable $e){
 			throw $e;
 		} finally {
@@ -97,11 +91,6 @@ abstract class ProcessorBase {
 		}
 	}
 
-	protected function cmpEntryFileProcessor($fp, $entryFilename){
-		//return (0 === strncmp($fp, $entryFilename, strlen($fp)));
-		return (preg_match('#^' . preg_quote($fp, '#') . '_[0-9]{8}_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.XML$#ui', $entryFilename) > 0);
-	}
-
-	abstract protected function getFileProcessors();
+	abstract protected function getEntryProcessors(): array;
 
 }

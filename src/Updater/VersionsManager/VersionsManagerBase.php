@@ -43,7 +43,7 @@ abstract class VersionsManagerBase {
 			$result = $this->fieldsCheckFilter($result, $fieldsCheck);
 		}
 
-		return $result;
+		return reset($result);
 	}
 
 	protected function fieldsCheckFilter(array $data, array $fieldsCheck){
