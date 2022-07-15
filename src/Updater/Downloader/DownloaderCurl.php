@@ -11,19 +11,42 @@ class DownloaderCurl extends DownloaderBase {
 		CURLOPT_CONNECTTIMEOUT => 10,
 		CURLOPT_SSL_VERIFYHOST => false,
 		CURLOPT_SSL_VERIFYPEER => false,
+		CURLOPT_BINARYTRANSFER => true,
 	];
 
-	protected function downloadFile($url, $file){
-		$fh = @fopen($file, 'wb');
+	public function download($url, $file, $checkExistsFile = true){
+		$options = [
+			CURLOPT_TIMEOUT => 60 * 60,
+			CURLOPT_HEADER => false,
+		];
+
+		$fmode = 'wb';
+		if (is_file($file) && $checkExistsFile){
+			clearstatcache(true, $file);
+			$fsize =  filesize($file);
+			if ($fsize > 0){
+				$headers = $this->getHeaders($url);
+				if (isset($headers['content-length'])){
+					if ($headers['content-length'] == $fsize){
+						return true;
+					} elseif ($headers['content-length'] > 0 && (isset($headers['accept-ranges']) && 'bytes' == $headers['accept-ranges'])){
+						$fmode = 'ab';
+
+						//$options[CURLOPT_RANGE] = $fsize . '-' . ($headers['content-length'] - 1);
+						$options[CURLOPT_RANGE] = $fsize . '-';
+					}
+				}
+			}
+		}
+
+		$fh = @fopen($file, $fmode);
 		if (false === $fh){
 			throw new DownloaderException('Create file error: \'' . $file . '\'.');
 		}
 
-		$result = $this->sendRequest($url, [
-			CURLOPT_TIMEOUT => 60 * 60,
-			CURLOPT_HEADER => false,
-			CURLOPT_FILE => $fh,
-		], static function($ch, $response){
+		$options[CURLOPT_FILE] = $fh;
+
+		$result = $this->sendRequest($url, $options, static function($ch, $response){
 			if (null == ($response = json_decode($response, true))){
 				throw new DownloaderException('JSON decode error: ' . json_last_error() . '.');
 			}
@@ -36,16 +59,35 @@ class DownloaderCurl extends DownloaderBase {
 		return $result;
 	}
 
-	protected function checkExistsFilesize($filesize, $url){
-		$urlFilesize = $this->sendRequest($url, [
+	protected function getHeaders($url){
+		$headers = $this->sendRequest($url, [
 			CURLOPT_TIMEOUT => 30,
 			CURLOPT_HEADER => true,
 			CURLOPT_NOBODY => true,
 		], static function($ch, $response){
-			return curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+			return $response;
 		});
 
-		return ($filesize == $urlFilesize);
+		$headers = explode("\n", trim($headers));
+		$result = [];
+		foreach ($headers as $i => $h){
+			if (0 == $i){
+				continue; // HTTP-code line
+			}
+
+			list($name, $value) = explode(':', $h, 2);
+
+			$name = trim($name);
+			$name = strtolower($name);
+			$name = str_replace('_', '-', $name);
+
+			$value = trim($value);
+			$value = strtolower($value);
+
+			$result[$name] = $value;
+		}
+
+		return $result;
 	}
 
 	protected function sendRequest($url, array $options, $resultCallback){
