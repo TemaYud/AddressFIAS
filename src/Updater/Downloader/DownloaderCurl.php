@@ -21,7 +21,7 @@ class DownloaderCurl extends DownloaderBase {
 		];
 
 		$fmode = 'wb';
-		if (is_file($file) && $checkExistsFile){
+		if ($checkExistsFile && is_file($file)){
 			clearstatcache(true, $file);
 			$fsize =  filesize($file);
 			if ($fsize > 0){
