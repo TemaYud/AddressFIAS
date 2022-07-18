@@ -8,5 +8,5 @@ require_once('vendor' . DIRECTORY_SEPARATOR . 'autoload.php');
 
 $updater = new \AddressFIAS\Updater();
 $updater->setProcessFileDir(__DIR__ . DIRECTORY_SEPARATOR . 'tmp');
-$updater->upgradeFull();
-#$updater->upgradeDelta();
+#$updater->upgradeFull();
+$updater->upgradeDelta();

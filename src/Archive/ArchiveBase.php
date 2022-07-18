@@ -9,6 +9,6 @@ abstract class ArchiveBase {
 
 	abstract public function getEntries();
 
-	abstract public function extractEntriy($entryname, $path);
+	abstract public function extractEntry($entryname, $path);
 
 }

@@ -176,7 +176,7 @@ class Updater {
 				if (0 === strncmp($fp, $entryFilename, strlen($fp))){
 					//if (!is_file(DOC_ROOT . $this->processFileDir . $basename . DS . $entryFilename)) #
 					//if (!$entry->extract(DOC_ROOT . $this->processFileDir . $basename . DS)){
-					if (!$arch->extractEntriy($entry['name'], DOC_ROOT . $this->processFileDir . $basename . DS)){
+					if (!$arch->extractEntry($entry['name'], DOC_ROOT . $this->processFileDir . $basename . DS)){
 						trigger_error('Extract file error. Archive: \'' . DOC_ROOT . $this->processFileDir . $filename . '\'. File: \'' . DOC_ROOT . $this->processFileDir . $basename . DS . $entryFilename . '\'.');
 						continue 2;
 					}

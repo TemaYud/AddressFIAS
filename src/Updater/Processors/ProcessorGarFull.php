@@ -1,8 +1,13 @@
 <?php
 namespace AddressFIAS\Updater\Processors;
 
-use AddressFIAS\Exception\ProcessorException;
+use AddressFIAS\Updater\EntriesManager\EntriesManagerBase;
+use AddressFIAS\Updater\EntriesManager\EntriesManagerGarFull;
 
-class ProcessorGarFull extends ProcessorGarDelta {
+class ProcessorGarFull extends ProcessorBase {
+
+	protected function getEntriesManager(): EntriesManagerBase {
+		return new EntriesManagerGarFull();
+	}
 
 }

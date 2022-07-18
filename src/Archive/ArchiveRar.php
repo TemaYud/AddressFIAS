@@ -56,7 +56,7 @@ class ArchiveRar extends ArchiveBase {
 		return false;
 	}
 
-	public function extractEntriy($entryname, $path){
+	public function extractEntry($entryname, $path){
 		if ($this->arch){
 			try {
 				if (false !== ($entry = $this->arch->getEntry($entryname))){

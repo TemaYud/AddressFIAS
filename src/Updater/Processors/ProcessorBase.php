@@ -5,6 +5,7 @@ use AddressFIAS\Archive\ArchiveBase;
 use AddressFIAS\Archive\ArchiveZip;
 use AddressFIAS\Updater\Processors\Entries\EntryBase;
 use AddressFIAS\Exception\ProcessorException;
+use AddressFIAS\Updater\EntriesManager\EntriesManagerBase;
 
 abstract class ProcessorBase {
 
@@ -62,33 +63,20 @@ abstract class ProcessorBase {
 		}
 
 		try {
-			$entryFiles = array_map(function($earr){
+			$extractDir = $this->getExtractDir();
+
+			$entriesManager = $this->getEntriesManager();
+			$entriesManager->addEntries(array_map(function($earr){
 				return $earr['name'];
-			}, $entries);
+			}, $entries), static function($entryName) use($arch, $extractDir) {
+				$entryPath = $extractDir . DIRECTORY_SEPARATOR . $entryName;
 
-			var_dump($entryFiles);
-			/*$entryFiles = array_combine($entryFiles, array_map(function($efile){
-				return basename($efile);
-			}, $entryFiles));
-
-			$entryProcessors = $this->getEntryProcessors();
-			$fs2p = [];
-			foreach ($entryProcessors as $entryMask => $processor){
-				$fs = array_filter($entryFiles, function($efile) use($entryMask){
-					return (preg_match('#' . $entryMask . '#ui', $efile) > 0);
-				});
-
-				if ($fs){
-					$fs2p[] = [
-						'files' => array_keys($fs),
-						'processor' => $processor,
-					];
-
-					$entryFiles = array_diff_assoc($entryFiles, $fs);
+				if (!$arch->extractEntry($entryName, $extractDir)){
+					throw new ProcessorException('File extraction error: \'' . $entryPath . '\'.');
 				}
-			}
 
-			var_dump($fs2p);*/
+				return $entryPath;
+			});
 		} catch (\Throwable $e){
 			throw $e;
 		} finally {
@@ -96,6 +84,6 @@ abstract class ProcessorBase {
 		}
 	}
 
-	abstract protected function getEntryProcessors(): array;
+	abstract protected function getEntriesManager(): EntriesManagerBase;
 
 }

@@ -46,7 +46,7 @@ class ArchiveUnzip extends ArchiveBase {
 		return $result;
 	}
 
-	public function extractEntriy($entryname, $path){
+	public function extractEntry($entryname, $path){
 		if (!$this->file){
 			return false;
 		}
