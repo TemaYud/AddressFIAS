@@ -1,16 +1,35 @@
 <?php
 namespace AddressFIAS\Updater\Processors;
 
-use AddressFIAS\Updater\EntriesLocation\EntriesLocationBase;
+use AddressFIAS\Archive\ArchiveBase;
+use AddressFIAS\Archive\ArchiveZip;
+use AddressFIAS\Updater\Processors\Entries\EntryBase;
 use AddressFIAS\Exception\ProcessorException;
 use AddressFIAS\Updater\EntriesManager\EntriesManagerBase;
 
-abstract class ProcessorBase {
+abstract class ProcessorArchiveBase extends ProcessorBase {
 
-	protected $entriesLocation;
+	protected $extractDir;
 
-	public function __construct(EntriesLocationBase $entriesLocation){
-		$this->entriesLocation = $entriesLocation;
+	protected function checkEntriesLocation($entriesLocation){
+		return is_file($entriesLocation);
+	}
+
+	public function setExtractDir($extractDir){
+		$this->extractDir = $extractDir;
+
+		if (!is_dir($this->extractDir)){
+			if (!@mkdir($this->extractDir, 0755, true)){
+				throw new ProcessorException('Failed to create directory \'' . $this->extractDir . '\'.');
+			}
+		}
+	}
+
+	public function getExtractDir(){
+		if (!$this->extractDir){
+			$this->setExtractDir(pathinfo($this->archiveFile, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR . pathinfo($this->archiveFile, PATHINFO_FILENAME));
+		}
+		return $this->extractDir;
 	}
 
 	public function process(){

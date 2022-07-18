@@ -7,6 +7,7 @@ use AddressFIAS\Updater\VersionStorage\VersionStorageBase;
 use AddressFIAS\Updater\VersionStorage\VersionStorageFile;
 use AddressFIAS\Updater\Downloader\DownloaderBase;
 use AddressFIAS\Updater\Downloader\DownloaderCurl;
+use AddressFIAS\Updater\EntriesLocation\EntriesLocationBase;
 use AddressFIAS\Updater\Processors\ProcessorBase;
 use AddressFIAS\Updater\Processors\ProcessorGarDelta;
 use AddressFIAS\Updater\Processors\ProcessorGarFull;
@@ -17,6 +18,7 @@ class Updater {
 	protected $versionsManager;
 	protected $versionStorage;
 	protected $downloader;
+	protected $entriesLocationHandler;
 
 	protected $processFileDir;
 
@@ -63,6 +65,17 @@ class Updater {
 		return $this->downloader;
 	}
 
+	public function setEntriesLocationHandler(EntriesLocationBase $entriesLocationHandler){
+		$this->entriesLocationHandler = $entriesLocationHandler;
+	}
+
+	public function getEntriesLocationHandler(){
+		if (!$this->entriesLocationHandler){
+			$this->setEntriesLocationHandler(new ArchiveZip());
+		}
+		return $this->entriesLocationHandler;
+	}
+
 	public function setProcessFileDir($processFileDir){
 		$this->processFileDir = $processFileDir;
 	}
@@ -76,6 +89,9 @@ class Updater {
 
 	public function upgradeDelta(){
 		$versionId = $this->getVersionStorage()->getCurrentVersionId();
+		if (!$versionId){
+			throw new UpdaterException('There is no information about the current VersionId. Run a full upgrade.');
+		}
 
 		$files = $this->getVersionsManager()->getDelta($versionId);
 		if (!$files){
@@ -83,7 +99,7 @@ class Updater {
 		}
 
 		foreach ($files as $farr){
-			if (!$this->processGarDelta($farr)){
+			if (!$this->processGarArchiveDelta($farr)){
 				break;
 			}
 
@@ -97,7 +113,7 @@ class Updater {
 			return false;
 		}
 
-		if (!$this->processGarFull($farr)){
+		if (!$this->processGarArchiveFull($farr)){
 			return false;
 		}
 
@@ -120,7 +136,7 @@ class Updater {
 		return $farr['VersionId'] . '_' . $filename;
 	}
 
-	public function processGarDelta(array $farr, ProcessorBase $processor = null){
+	public function processGarArchiveDelta(array $farr, string $processor = null){
 		$filename = $this->generateArchiveFilename($farr, 'GarXMLDeltaURL');
 		$filepath = $this->getProcessFileDir() . DIRECTORY_SEPARATOR . $filename;
 
@@ -129,11 +145,11 @@ class Updater {
 		if (is_null($processor)){
 			$processor = ProcessorGarDelta::class;
 		}
-		$processor = new $processor($filepath);
-		return $processor->process();
+
+		return $this->processGarArchive($processor, $filepath);
 	}
 
-	public function processGarFull(array $farr, ProcessorBase $processor = null){
+	public function processGarArchiveFull(array $farr, string $processor = null){
 		$filename = $this->generateArchiveFilename($farr, 'GarXMLFullURL');
 		$filepath = $this->getProcessFileDir() . DIRECTORY_SEPARATOR . $filename;
 
@@ -142,8 +158,49 @@ class Updater {
 		if (is_null($processor)){
 			$processor = ProcessorGarFull::class;
 		}
-		$processor = new $processor($filepath);
-		return $processor->process();
+
+		return $this->processGarArchive($processor, $filepath);
+	}
+
+	protected function processGarArchive(string $processor, $filepath){
+		if(!is_subclass_of($processor, ProcessorBase::class)){
+			throw new UpdaterException('Processor must be name of class that is the instance ' . ProcessorBase::class . '.');
+		}
+
+		$arch = $this->getEntriesLocationHandler();
+		$arch->open($filepath);
+		if (false === $arch){
+			throw new UpdaterException('Open archive error ' . $filepath . '.');
+		}
+
+		/*$entries = $arch->getEntries();
+		if (false === $entries){
+			throw new ProcessorException('Get archive entries error');
+		}*/
+
+		try {
+			$processor = new $processor($arch);
+			return $processor->process();
+
+			/*$extractDir = $this->getExtractDir();
+
+			$entriesManager = $this->getEntriesManager();
+			$entriesManager->addEntries(array_map(function($earr){
+				return $earr['name'];
+			}, $entries), static function($entryName) use($arch, $extractDir) {
+				$entryPath = $extractDir . DIRECTORY_SEPARATOR . $entryName;
+
+				if (!$arch->extractEntry($entryName, $extractDir)){
+					throw new ProcessorException('File extraction error: \'' . $entryPath . '\'.');
+				}
+
+				return $entryPath;
+			});*/
+		} catch (\Throwable $e){
+			throw $e;
+		} finally {
+			$arch->close();
+		}
 	}
 
 
