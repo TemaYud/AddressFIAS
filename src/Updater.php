@@ -152,6 +152,8 @@ class Updater {
 
 		$storage = new EntriesStorageArchive($filepath, $archive);
 
+		$storage->getEntries();
+
 		/*$entries = $arch->getEntries();
 		if (false === $entries){
 			throw new ProcessorException('Get archive entries error');
@@ -186,6 +188,8 @@ class Updater {
 		$this->checkProcessorClassName($processor);
 
 		$storage = new EntriesStorageDir($path);
+
+		$storage->getEntries();
 	}
 
 
