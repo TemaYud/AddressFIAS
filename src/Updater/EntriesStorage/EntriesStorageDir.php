@@ -24,7 +24,7 @@ class EntriesStorageDir extends EntriesStorageBase {
 		return $result;
 	}
 
-	public function entriesToProcessing(array $entries): array {
+	public function toProcess(array $entries): array {
 		return $entries;
 	}
 

@@ -2,42 +2,47 @@
 namespace AddressFIAS\Updater\Processors;
 
 use AddressFIAS\Updater\EntriesStorage\EntriesStorageBase;
+use AddressFIAS\Storage\StorageBase;
 use AddressFIAS\Exception\ProcessorException;
 
 abstract class ProcessorBase {
 
+	public static function checkProcessorClassName(string $processor){
+		if (!is_subclass_of($processor, self::class)){
+			throw new ProcessorException('Processor \'' . $processor . '\' must be name of class that is the instance ' . self::class . '.');
+		}
+	}
+
 	protected $entriesStorage;
 
-	public function __construct(EntriesStorageBase $entriesStorage){
+	protected $storage;
+
+	public function __construct(EntriesStorageBase $entriesStorage, StorageBase $storage){
 		$this->entriesStorage = $entriesStorage;
+		$this->storage = $storage;
 	}
 
 	public function process(){
 		$entries = $this->entriesStorage->getEntries();
 		if (false === $entries){
-			throw new ProcessorException('Error getting entries from storage.');
+			throw new ProcessorException('Error getting entries from EntriesStorage.');
 		}
 
-		$processFiles = [];
-
 		$filesMasks = $this->getFilesMasks();
-		foreach ($filesMasks as $mask => $processor){
+		foreach ($filesMasks as $mask => $entryProcessor){
 			$fs = array_filter($entries, function($efile) use($mask){
 				return (preg_match($mask, $efile) > 0);
 			});
 
 			if ($fs){
-				$processFiles[] = [
-					'files' => $fs,
-					'processor' => $processor,
-				];
+				$files = $this->entriesStorage->toProcess($fs);
+
+				$entryProcessor = new $entryProcessor($files, $this->storage);
+				$entryProcessor->start();
 
 				$entries = array_diff($entries, $fs);
 			}
 		}
-
-		var_dump($processFiles);
-		//var_dump($this->entriesStorage->entriesToProcessing($entries));
 	}
 
 	abstract protected function getFilesMasks(): array;

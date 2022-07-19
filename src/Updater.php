@@ -12,6 +12,7 @@ use AddressFIAS\Updater\EntriesStorage\EntriesStorageDir;
 use AddressFIAS\Updater\Processors\ProcessorBase;
 use AddressFIAS\Updater\Processors\ProcessorGarDelta;
 use AddressFIAS\Updater\Processors\ProcessorGarFull;
+use AddressFIAS\Storage\StorageBase;
 use AddressFIAS\Exception\UpdaterException;
 
 class Updater {
@@ -77,7 +78,7 @@ class Updater {
 		return $this->processFileDir;
 	}
 
-	public function upgradeDelta(){
+	public function upgradeDelta(StorageBase $storage){
 		$versionId = $this->getVersionStorage()->getCurrentVersionId();
 		if (!$versionId){
 			throw new UpdaterException('There is no information about the current VersionId. Run a full upgrade.');
@@ -91,7 +92,7 @@ class Updater {
 		foreach ($files as $farr){
 			$filepath = $this->downloadArchive($farr['GarXMLDeltaURL'], $farr['VersionId']);
 
-			if (!$this->processArchive($filepath, ProcessorGarDelta::class)){
+			if (!$this->processArchive($filepath, ProcessorGarDelta::class, $storage)){
 				break;
 			}
 
@@ -99,7 +100,7 @@ class Updater {
 		}
 	}
 
-	public function upgradeFull(){
+	public function upgradeFull(StorageBase $storage){
 		$farr = $this->getVersionsManager()->getLast();
 		if (!$farr){
 			return false;
@@ -107,7 +108,7 @@ class Updater {
 
 		$filepath = $this->downloadArchive($farr['GarXMLFullURL'], $farr['VersionId']);
 
-		if (!$this->processArchive($filepath, ProcessorGarFull::class)){
+		if (!$this->processArchive($filepath, ProcessorGarFull::class, $storage)){
 			return false;
 		}
 
@@ -136,32 +137,26 @@ class Updater {
 		return $filepath;
 	}
 
-	protected function checkProcessorClassName(string $processor){
-		if (!is_subclass_of($processor, ProcessorBase::class)){
-			throw new UpdaterException('Processor must be name of class that is the instance ' . ProcessorBase::class . '.');
-		}
-	}
-
-	public function processArchive(string $filepath, string $processor){
-		$this->checkProcessorClassName($processor);
+	public function processArchive(string $filepath, string $processor, StorageBase $storage){
+		ProcessorBase::checkProcessorClassName($processor);
 
 		$archive = EntriesStorageArchive::factoryArchiveHandler($filepath);
 		if (!$archive){
 			throw new UpdaterException('Missing archive handler ' . $filepath . '.');
 		}
 
-		$storage = new EntriesStorageArchive($filepath, $archive);
+		$entriesStorage = new EntriesStorageArchive($filepath, $archive);
 
-		$processor = new $processor($storage);
+		$processor = new $processor($entriesStorage, $storage);
 		return $processor->process();
 	}
 
-	public function processDir(string $path, string $processor){
-		$this->checkProcessorClassName($processor);
+	public function processDir(string $path, string $processor, StorageBase $storage){
+		ProcessorBase::checkProcessorClassName($processor);
 
-		$storage = new EntriesStorageDir($path);
+		$entriesStorage = new EntriesStorageDir($path);
 
-		$processor = new $processor($storage);
+		$processor = new $processor($entriesStorage, $storage);
 		return $processor->process();
 	}
 
@@ -244,9 +239,6 @@ class Updater {
 		}
 
 		return true;
-	}
-
-	public function getProcessors(){
 	}
 
 	public function createUpdateTable($tbl){

@@ -49,7 +49,7 @@ class EntriesStorageArchive extends EntriesStorageBase {
 		}, $entries);
 	}
 
-	public function entriesToProcessing(array $entries): array {
+	public function toProcess(array $entries): array {
 		$extractDir = $this->getExtractDir();
 
 		return array_map(function($entryName) use($extractDir) {

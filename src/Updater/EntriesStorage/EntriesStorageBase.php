@@ -11,6 +11,6 @@ abstract class EntriesStorageBase {
 
 	abstract public function getEntries(): array;
 
-	abstract public function entriesToProcessing(array $entries): array;
+	abstract public function toProcess(array $entries): array;
 
 }

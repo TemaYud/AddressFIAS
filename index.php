@@ -7,9 +7,16 @@ ini_set('log_errors', true);
 require_once('vendor' . DIRECTORY_SEPARATOR . 'autoload.php');
 
 use AddressFIAS\Updater;
+use AddressFIAS\Updater\Processors\ProcessorGarFull;
 use AddressFIAS\Updater\Processors\ProcessorGarDelta;
+use AddressFIAS\Storage\StorageMysql;
 
 $updater = new Updater();
-//$updater->processDir(__DIR__ . '/tmp/process_dir_20220719_gar_delta_xml', ProcessorGarDelta::class);
-$updater->setProcessFileDir(__DIR__ . DIRECTORY_SEPARATOR . 'tmp');
-$updater->upgradeDelta();
+$storage = new StorageMysql();
+
+//$updater->processArchive(__DIR__ . '/tmp/20220715_gar_xml.zip', ProcessorGarFull::class, $storage);
+
+$updater->processDir(__DIR__ . '/tmp/\20220715_gar_xml', ProcessorGarDelta::class, $storage);
+
+//$updater->setProcessFileDir(__DIR__ . DIRECTORY_SEPARATOR . 'tmp');
+//$updater->upgradeDelta($storage);
