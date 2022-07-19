@@ -7,7 +7,8 @@ use AddressFIAS\Updater\VersionStorage\VersionStorageBase;
 use AddressFIAS\Updater\VersionStorage\VersionStorageFile;
 use AddressFIAS\Updater\Downloader\DownloaderBase;
 use AddressFIAS\Updater\Downloader\DownloaderCurl;
-use AddressFIAS\Updater\EntriesLocation\EntriesLocationBase;
+use AddressFIAS\Updater\EntriesStorage\EntriesStorageArchive;
+use AddressFIAS\Updater\EntriesStorage\EntriesStorageDir;
 use AddressFIAS\Updater\Processors\ProcessorBase;
 use AddressFIAS\Updater\Processors\ProcessorGarDelta;
 use AddressFIAS\Updater\Processors\ProcessorGarFull;
@@ -17,8 +18,8 @@ class Updater {
 
 	protected $versionsManager;
 	protected $versionStorage;
+
 	protected $downloader;
-	protected $entriesLocationHandler;
 
 	protected $processFileDir;
 
@@ -65,17 +66,6 @@ class Updater {
 		return $this->downloader;
 	}
 
-	public function setEntriesLocationHandler(EntriesLocationBase $entriesLocationHandler){
-		$this->entriesLocationHandler = $entriesLocationHandler;
-	}
-
-	public function getEntriesLocationHandler(){
-		if (!$this->entriesLocationHandler){
-			$this->setEntriesLocationHandler(new ArchiveZip());
-		}
-		return $this->entriesLocationHandler;
-	}
-
 	public function setProcessFileDir($processFileDir){
 		$this->processFileDir = $processFileDir;
 	}
@@ -99,7 +89,9 @@ class Updater {
 		}
 
 		foreach ($files as $farr){
-			if (!$this->processGarArchiveDelta($farr)){
+			$filepath = $this->downloadArchive($farr['GarXMLDeltaURL'], $farr['VersionId']);
+
+			if (!$this->processArchive($filepath, ProcessorGarDelta::class)){
 				break;
 			}
 
@@ -113,70 +105,57 @@ class Updater {
 			return false;
 		}
 
-		if (!$this->processGarArchiveFull($farr)){
+		$filepath = $this->downloadArchive($farr['GarXMLFullURL'], $farr['VersionId']);
+
+		if (!$this->processArchive($filepath, ProcessorGarFull::class)){
 			return false;
 		}
 
 		$this->getVersionStorage()->setCurrentVersionId($farr['VersionId'], $farr);
 	}
 
-	protected function generateArchiveFilename(array $farr, $key){
-		if (!isset($farr[$key])){
-			throw new UpdaterException('Key \'' . $key . '\' is not exists in version\'s array.');
-		}
-		if (!filter_var($farr[$key], FILTER_VALIDATE_URL, FILTER_FLAG_PATH_REQUIRED)){
-			throw new UpdaterException('URL \'' . $farr[$key] . '\' is invalid or does not contain a path part.');
+	protected function generateArchiveFilename(string $url, string $versionId):string {
+		if (!filter_var($url, FILTER_VALIDATE_URL, FILTER_FLAG_PATH_REQUIRED)){
+			throw new UpdaterException('URL \'' . $url . '\' is invalid or does not contain a path part.');
 		}
 
-		$filename = pathinfo($farr[$key], PATHINFO_BASENAME);
+		$filename = pathinfo($url, PATHINFO_BASENAME);
 		if (!$filename){
-			throw new UpdaterException('URL \'' . $farr[$key] . '\' does not contain a file basename.');
+			throw new UpdaterException('URL \'' . $url . '\' does not contain a file basename.');
 		}
 
-		return $farr['VersionId'] . '_' . $filename;
+		return $versionId . '_' . $filename;
 	}
 
-	public function processGarArchiveDelta(array $farr, string $processor = null){
-		$filename = $this->generateArchiveFilename($farr, 'GarXMLDeltaURL');
+	protected function downloadArchive(string $url, string $versionId):string {
+		$filename = $this->generateArchiveFilename($url, $versionId);
 		$filepath = $this->getProcessFileDir() . DIRECTORY_SEPARATOR . $filename;
 
-		$this->getDownloader()->download($farr['GarXMLDeltaURL'], $filepath);
+		$this->getDownloader()->download($url, $filepath);
 
-		if (is_null($processor)){
-			$processor = ProcessorGarDelta::class;
-		}
-
-		return $this->processGarArchive($processor, $filepath);
+		return $filepath;
 	}
 
-	public function processGarArchiveFull(array $farr, string $processor = null){
-		$filename = $this->generateArchiveFilename($farr, 'GarXMLFullURL');
-		$filepath = $this->getProcessFileDir() . DIRECTORY_SEPARATOR . $filename;
-
-		$this->getDownloader()->download($farr['GarXMLFullURL'], $filepath);
-
-		if (is_null($processor)){
-			$processor = ProcessorGarFull::class;
-		}
-
-		return $this->processGarArchive($processor, $filepath);
-	}
-
-	protected function processGarArchive(string $processor, $filepath){
-		if(!is_subclass_of($processor, ProcessorBase::class)){
+	protected function checkProcessorClassName(string $processor){
+		if (!is_subclass_of($processor, ProcessorBase::class)){
 			throw new UpdaterException('Processor must be name of class that is the instance ' . ProcessorBase::class . '.');
 		}
+	}
 
-		$arch = $this->getEntriesLocationHandler();
-		$arch->open($filepath);
-		if (false === $arch){
-			throw new UpdaterException('Open archive error ' . $filepath . '.');
+	public function processArchive(string $filepath, string $processor){
+		$this->checkProcessorClassName($processor);
+
+		$archive = EntriesStorageArchive::factoryArchiveHandler($filepath);
+		if (!$archive){
+			throw new UpdaterException('Missing archive handler ' . $filepath . '.');
 		}
+
+		$storage = new EntriesStorageArchive($filepath, $archive);
 
 		/*$entries = $arch->getEntries();
 		if (false === $entries){
 			throw new ProcessorException('Get archive entries error');
-		}*/
+		}* /
 
 		try {
 			$processor = new $processor($arch);
@@ -195,12 +174,18 @@ class Updater {
 				}
 
 				return $entryPath;
-			});*/
+			});* /
 		} catch (\Throwable $e){
 			throw $e;
 		} finally {
 			$arch->close();
-		}
+		}*/
+	}
+
+	public function processDir(string $path, string $processor){
+		$this->checkProcessorClassName($processor);
+
+		$storage = new EntriesStorageDir($path);
 	}
 
 

@@ -6,7 +6,8 @@ ini_set('log_errors', true);
 
 require_once('vendor' . DIRECTORY_SEPARATOR . 'autoload.php');
 
-$updater = new \AddressFIAS\Updater();
-$updater->setProcessFileDir(__DIR__ . DIRECTORY_SEPARATOR . 'tmp');
-#$updater->upgradeFull();
-$updater->upgradeDelta();
+use AddressFIAS\Updater;
+use AddressFIAS\Updater\Processors\ProcessorGarDelta;
+
+$updater = new Updater();
+$updater->processDir(__DIR__ . '/tmp/20220719_gar_delta_xml', ProcessorGarDelta::class);
