@@ -152,36 +152,8 @@ class Updater {
 
 		$storage = new EntriesStorageArchive($filepath, $archive);
 
-		$storage->getEntries();
-
-		/*$entries = $arch->getEntries();
-		if (false === $entries){
-			throw new ProcessorException('Get archive entries error');
-		}* /
-
-		try {
-			$processor = new $processor($arch);
-			return $processor->process();
-
-			/*$extractDir = $this->getExtractDir();
-
-			$entriesManager = $this->getEntriesManager();
-			$entriesManager->addEntries(array_map(function($earr){
-				return $earr['name'];
-			}, $entries), static function($entryName) use($arch, $extractDir) {
-				$entryPath = $extractDir . DIRECTORY_SEPARATOR . $entryName;
-
-				if (!$arch->extractEntry($entryName, $extractDir)){
-					throw new ProcessorException('File extraction error: \'' . $entryPath . '\'.');
-				}
-
-				return $entryPath;
-			});* /
-		} catch (\Throwable $e){
-			throw $e;
-		} finally {
-			$arch->close();
-		}*/
+		$processor = new $processor($storage);
+		return $processor->process();
 	}
 
 	public function processDir(string $path, string $processor){
@@ -189,7 +161,8 @@ class Updater {
 
 		$storage = new EntriesStorageDir($path);
 
-		$storage->getEntries();
+		$processor = new $processor($storage);
+		return $processor->process();
 	}
 
 

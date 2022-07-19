@@ -10,4 +10,6 @@ use AddressFIAS\Updater;
 use AddressFIAS\Updater\Processors\ProcessorGarDelta;
 
 $updater = new Updater();
-$updater->processDir(__DIR__ . '/tmp/20220719_gar_delta_xml', ProcessorGarDelta::class);
+//$updater->processDir(__DIR__ . '/tmp/process_dir_20220719_gar_delta_xml', ProcessorGarDelta::class);
+$updater->setProcessFileDir(__DIR__ . DIRECTORY_SEPARATOR . 'tmp');
+$updater->upgradeDelta();

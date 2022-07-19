@@ -52,7 +52,7 @@ class EntriesStorageArchive extends EntriesStorageBase {
 	public function entriesToProcessing(array $entries): array {
 		$extractDir = $this->getExtractDir();
 
-		return array_walk($entries, function($entryName) use($extractDir) {
+		return array_map(function($entryName) use($extractDir) {
 			$entryPath = $extractDir . DIRECTORY_SEPARATOR . $entryName;
 
 			if (!$this->archive->extractEntry($entryName, $extractDir)){
@@ -60,7 +60,7 @@ class EntriesStorageArchive extends EntriesStorageBase {
 			}
 
 			return $entryPath;
-		});
+		}, $entries);
 	}
 
 	public function setExtractDir($extractDir){

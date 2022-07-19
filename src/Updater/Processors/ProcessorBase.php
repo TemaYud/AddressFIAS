@@ -1,31 +1,25 @@
 <?php
 namespace AddressFIAS\Updater\Processors;
 
-use AddressFIAS\Updater\EntriesLocation\EntriesLocationBase;
+use AddressFIAS\Updater\EntriesStorage\EntriesStorageBase;
 use AddressFIAS\Exception\ProcessorException;
-use AddressFIAS\Updater\EntriesManager\EntriesManagerBase;
 
 abstract class ProcessorBase {
 
-	protected $entriesLocation;
+	protected $entriesStorage;
 
-	public function __construct(EntriesLocationBase $entriesLocation){
-		$this->entriesLocation = $entriesLocation;
+	public function __construct(EntriesStorageBase $entriesStorage){
+		$this->entriesStorage = $entriesStorage;
 	}
 
 	public function process(){
-		$arch = $this->getArchiveHandler();
-		$arch->open($this->archiveFile);
-		if (false === $arch){
-			throw new ProcessorException('Open archive error');
-		}
-
-		$entries = $arch->getEntries();
+		$entries = $this->entriesStorage->getEntries();
 		if (false === $entries){
-			throw new ProcessorException('Get archive entries error');
+			throw new ProcessorException('Error getting entries from storage.');
 		}
 
-		try {
+		var_dump($this->entriesStorage->entriesToProcessing($entries));
+		/*try {
 			$extractDir = $this->getExtractDir();
 
 			$entriesManager = $this->getEntriesManager();
@@ -44,9 +38,9 @@ abstract class ProcessorBase {
 			throw $e;
 		} finally {
 			$arch->close();
-		}
+		}*/
 	}
 
-	abstract protected function getEntriesManager(): EntriesManagerBase;
+	//abstract protected function getEntriesManager(): EntriesManagerBase;
 
 }
