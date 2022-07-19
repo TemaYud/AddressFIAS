@@ -18,29 +18,28 @@ abstract class ProcessorBase {
 			throw new ProcessorException('Error getting entries from storage.');
 		}
 
-		var_dump($this->entriesStorage->entriesToProcessing($entries));
-		/*try {
-			$extractDir = $this->getExtractDir();
+		$processFiles = [];
 
-			$entriesManager = $this->getEntriesManager();
-			$entriesManager->addEntries(array_map(function($earr){
-				return $earr['name'];
-			}, $entries), static function($entryName) use($arch, $extractDir) {
-				$entryPath = $extractDir . DIRECTORY_SEPARATOR . $entryName;
-
-				if (!$arch->extractEntry($entryName, $extractDir)){
-					throw new ProcessorException('File extraction error: \'' . $entryPath . '\'.');
-				}
-
-				return $entryPath;
+		$filesMasks = $this->getFilesMasks();
+		foreach ($filesMasks as $mask => $processor){
+			$fs = array_filter($entries, function($efile) use($mask){
+				return (preg_match($mask, $efile) > 0);
 			});
-		} catch (\Throwable $e){
-			throw $e;
-		} finally {
-			$arch->close();
-		}*/
+
+			if ($fs){
+				$processFiles[] = [
+					'files' => $fs,
+					'processor' => $processor,
+				];
+
+				$entries = array_diff($entries, $fs);
+			}
+		}
+
+		var_dump($processFiles);
+		//var_dump($this->entriesStorage->entriesToProcessing($entries));
 	}
 
-	//abstract protected function getEntriesManager(): EntriesManagerBase;
+	abstract protected function getFilesMasks(): array;
 
 }

@@ -29,6 +29,6 @@ abstract class EntriesManagerBase {
 		return $result;
 	}
 
-	abstract protected function getFilterEntriesMask(): array;
+	abstract protected function getFilesMasks(): array;
 
 }
