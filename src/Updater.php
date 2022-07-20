@@ -92,7 +92,7 @@ class Updater {
 		foreach ($files as $farr){
 			$filepath = $this->downloadArchive($farr['GarXMLDeltaURL'], $farr['VersionId']);
 
-			if (!$this->processArchive($filepath, ProcessorGarDelta::class, $storage)){
+			if (!$this->processArchive($filepath, new ProcessorGarDelta($storage))){
 				break;
 			}
 
@@ -108,7 +108,7 @@ class Updater {
 
 		$filepath = $this->downloadArchive($farr['GarXMLFullURL'], $farr['VersionId']);
 
-		if (!$this->processArchive($filepath, ProcessorGarFull::class, $storage)){
+		if (!$this->processArchive($filepath, new ProcessorGarFull($storage))){
 			return false;
 		}
 
@@ -137,9 +137,7 @@ class Updater {
 		return $filepath;
 	}
 
-	public function processArchive(string $filepath, string $processor, StorageBase $storage){
-		ProcessorBase::checkProcessorClassName($processor);
-
+	public function processArchive(string $filepath, ProcessorBase $processor){
 		$archive = EntriesStorageArchive::factoryArchiveHandler($filepath);
 		if (!$archive){
 			throw new UpdaterException('Missing archive handler ' . $filepath . '.');
@@ -147,17 +145,13 @@ class Updater {
 
 		$entriesStorage = new EntriesStorageArchive($filepath, $archive);
 
-		$processor = new $processor($entriesStorage, $storage);
-		return $processor->process();
+		return $processor->process($entriesStorage);
 	}
 
-	public function processDir(string $path, string $processor, StorageBase $storage){
-		ProcessorBase::checkProcessorClassName($processor);
-
+	public function processDir(string $path, ProcessorBase $processor){
 		$entriesStorage = new EntriesStorageDir($path);
 
-		$processor = new $processor($entriesStorage, $storage);
-		return $processor->process();
+		return $processor->process($entriesStorage);
 	}
 
 
