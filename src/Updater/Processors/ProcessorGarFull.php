@@ -15,4 +15,10 @@ class ProcessorGarFull extends ProcessorBase {
 		];
 	}
 
+	protected function startEntryProcessor(EntryBase $entryProcessor){
+		$entryProcessor->setFullUpdate(true);
+
+		return $entryProcessor->start();
+	}
+
 }

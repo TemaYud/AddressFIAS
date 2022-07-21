@@ -7,4 +7,8 @@ class ProcessorGarDelta extends ProcessorGarFull {
 		return parent::getEntriesProcessors();
 	}
 
+	protected function startEntryProcessor(EntryBase $entryProcessor){
+		return $entryProcessor->start();
+	}
+
 }

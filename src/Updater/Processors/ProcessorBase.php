@@ -3,11 +3,14 @@ namespace AddressFIAS\Updater\Processors;
 
 use AddressFIAS\Updater\EntriesStorage\EntriesStorageBase;
 use AddressFIAS\Storage\StorageBase;
+use AddressFIAS\Updater\Processors\Entries\EntryBase;
 use AddressFIAS\Exception\ProcessorException;
 
 abstract class ProcessorBase {
 
 	protected $storage;
+
+	protected $entryProcessors = [];
 
 	public function __construct(StorageBase $storage){
 		$this->storage = $storage;
@@ -28,14 +31,32 @@ abstract class ProcessorBase {
 			if ($fs){
 				$files = $entriesStorage->toProcess($fs);
 
-				$entryProcessor = new $entryProcessor($files, $this->storage);
-				$entryProcessor->start();
+				$this->add($files, $entryProcessor);
 
 				$entries = array_diff($entries, $fs);
 			}
 		}
+
+		$this->run();
 	}
 
 	abstract protected function getEntriesProcessors(): array;
+
+	protected function add(array $files, $entryProcessor){
+		$this->entryProcessors[] = [
+			'files' => $files,
+			'entryProcessor' => $entryProcessor,
+		];
+	}
+
+	protected function run(){
+		array_walk($this->entryProcessors, function($arr, $key, $storage){
+			$this->startEntryProcessor(new $arr['entryProcessor']($arr['files'], $storage));
+		}, $this->storage);
+	}
+
+	protected function startEntryProcessor(EntryBase $entryProcessor){
+		return $entryProcessor->start();
+	}
 
 }
