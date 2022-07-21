@@ -37,19 +37,19 @@ abstract class EntryBase {
 			continue 2;
 		}
 
-		#if (!$this->fillTableFrom('update_' . $tarr['table'], $tarr['table'])){
+		#if (!$this->storage->fillTableFrom('update_' . $tarr['table'], $tarr['table'])){
 		#	trigger_error('Failed to fill update database table');
 		#	unlink(DOC_ROOT . $this->processFileDir . $basename . DS . $entryFilename);
 		#	continue 2;
 		#}
 
-		$this->loadFromXML(DOC_ROOT . $this->processFileDir . $basename . DS . $entryFilename, 'update_' . $tarr['table'], $tarr['rows_identified']);
+		$this->storage->loadFromXML(DOC_ROOT . $this->processFileDir . $basename . DS . $entryFilename, 'update_' . $tarr['table'], $tarr['rows_identified']);
 
 		/*if (!\Page::$DB->ping()){
 			\Page::$DB->reconnect();
 		}
 
-		if (!$this->replaceUpdatedData($tarr['table'])){
+		if (!$this->storage->replaceUpdatedData($tarr['table'])){
 			trigger_error('Failed to replace updated data');
 		}
 
@@ -57,7 +57,7 @@ abstract class EntryBase {
 			call_user_func($tarr['callback'], $tarr['table']);
 		}*/
 
-		$this->dropTable('update_' . $tarr['table']);
+		$this->storage->dropTable('update_' . $tarr['table']);
 	}
 
 }
