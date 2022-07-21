@@ -25,7 +25,39 @@ abstract class EntryBase {
 	}
 
 	public function start(){
-		#
+		if (!($r = $this->storage->createTableLike($tarr['table'], 'update_' . $tarr['table']))){
+			trigger_error('Failed to create update database table');
+			unlink(DOC_ROOT . $this->processFileDir . $basename . DS . $entryFilename);
+			continue 2;
+		}
+
+		if (!$this->storage->truncateTable($tarr['table'])){
+			trigger_error('Failed to truncate update database table');
+			unlink(DOC_ROOT . $this->processFileDir . $basename . DS . $entryFilename);
+			continue 2;
+		}
+
+		#if (!$this->fillTableFrom('update_' . $tarr['table'], $tarr['table'])){
+		#	trigger_error('Failed to fill update database table');
+		#	unlink(DOC_ROOT . $this->processFileDir . $basename . DS . $entryFilename);
+		#	continue 2;
+		#}
+
+		$this->loadFromXML(DOC_ROOT . $this->processFileDir . $basename . DS . $entryFilename, 'update_' . $tarr['table'], $tarr['rows_identified']);
+
+		/*if (!\Page::$DB->ping()){
+			\Page::$DB->reconnect();
+		}
+
+		if (!$this->replaceUpdatedData($tarr['table'])){
+			trigger_error('Failed to replace updated data');
+		}
+
+		if (!empty($tarr['callback'])){
+			call_user_func($tarr['callback'], $tarr['table']);
+		}*/
+
+		$this->dropTable('update_' . $tarr['table']);
 	}
 
 }
