@@ -1,12 +1,12 @@
 <?php
-namespace AddressFIAS\Updater\Processors;
+namespace AddressFIAS\Updater\EntriesManager;
 
 use AddressFIAS\Updater\EntriesStorage\EntriesStorageBase;
 use AddressFIAS\Storage\StorageBase;
-use AddressFIAS\Updater\Processors\Entries\EntryBase;
-use AddressFIAS\Exception\ProcessorException;
+use AddressFIAS\Updater\EntriesManager\Entries\EntryBase;
+use AddressFIAS\Exception\EntriesManagerException;
 
-abstract class ProcessorBase {
+abstract class EntriesManagerBase {
 
 	protected $storage;
 
@@ -19,7 +19,7 @@ abstract class ProcessorBase {
 	public function process(EntriesStorageBase $entriesStorage){
 		$entries = $entriesStorage->getEntries();
 		if (false === $entries){
-			throw new ProcessorException('Error getting entries from EntriesStorage.');
+			throw new EntriesManagerException('Error getting entries from EntriesStorage.');
 		}
 
 		$filesMasks = $this->getEntriesProcessors();

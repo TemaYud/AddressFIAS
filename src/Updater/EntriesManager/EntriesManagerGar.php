@@ -1,7 +1,7 @@
 <?php
-namespace AddressFIAS\Updater\Processors;
+namespace AddressFIAS\Updater\EntriesManager;
 
-class ProcessorGarFull extends ProcessorBase {
+class EntriesManagerGar extends EntriesManagerBase {
 
 	protected function getEntriesProcessors(): array {
 		return [

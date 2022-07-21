@@ -9,9 +9,8 @@ use AddressFIAS\Updater\Downloader\DownloaderBase;
 use AddressFIAS\Updater\Downloader\DownloaderCurl;
 use AddressFIAS\Updater\EntriesStorage\EntriesStorageArchive;
 use AddressFIAS\Updater\EntriesStorage\EntriesStorageDir;
-use AddressFIAS\Updater\Processors\ProcessorBase;
-use AddressFIAS\Updater\Processors\ProcessorGarDelta;
-use AddressFIAS\Updater\Processors\ProcessorGarFull;
+use AddressFIAS\Updater\EntriesManager\EntriesManagerBase;
+use AddressFIAS\Updater\EntriesManager\EntriesManagerGar;
 use AddressFIAS\Storage\StorageBase;
 use AddressFIAS\Exception\UpdaterException;
 
@@ -92,7 +91,9 @@ class Updater {
 		foreach ($files as $farr){
 			$filepath = $this->downloadArchive($farr['GarXMLDeltaURL'], $farr['VersionId']);
 
-			if (!$this->processArchive($filepath, new ProcessorGarDelta($storage))){
+			$manager = new EntriesManagerGar($storage);
+
+			if (!$this->processArchive($filepath, $manager)){
 				break;
 			}
 
@@ -108,7 +109,10 @@ class Updater {
 
 		$filepath = $this->downloadArchive($farr['GarXMLFullURL'], $farr['VersionId']);
 
-		if (!$this->processArchive($filepath, new ProcessorGarFull($storage))){
+			$manager = new EntriesManagerGar($storage);
+			#$manager->setFullUpdate(true);
+
+		if (!$this->processArchive($filepath, $manager)){
 			return false;
 		}
 
@@ -137,7 +141,7 @@ class Updater {
 		return $filepath;
 	}
 
-	public function processArchive(string $filepath, ProcessorBase $processor){
+	public function processArchive(string $filepath, EntriesManagerBase $entriesManager){
 		$archive = EntriesStorageArchive::factoryArchiveHandler($filepath);
 		if (!$archive){
 			throw new UpdaterException('Missing archive handler ' . $filepath . '.');
@@ -145,13 +149,13 @@ class Updater {
 
 		$entriesStorage = new EntriesStorageArchive($filepath, $archive);
 
-		return $processor->process($entriesStorage);
+		return $entriesManager->process($entriesStorage);
 	}
 
-	public function processDir(string $path, ProcessorBase $processor){
+	public function processDir(string $path, EntriesManagerBase $entriesManager){
 		$entriesStorage = new EntriesStorageDir($path);
 
-		return $processor->process($entriesStorage);
+		return $entriesManager->process($entriesStorage);
 	}
 
 

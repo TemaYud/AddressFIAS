@@ -28,19 +28,19 @@ abstract class EntryBase {
 		if (!($r = $this->storage->createTableLike($tarr['table'], 'update_' . $tarr['table']))){
 			trigger_error('Failed to create update database table');
 			unlink(DOC_ROOT . $this->processFileDir . $basename . DS . $entryFilename);
-			continue 2;
+			return false;
 		}
 
 		if (!$this->storage->truncateTable($tarr['table'])){
 			trigger_error('Failed to truncate update database table');
 			unlink(DOC_ROOT . $this->processFileDir . $basename . DS . $entryFilename);
-			continue 2;
+			return false;
 		}
 
 		#if (!$this->storage->fillTableFrom('update_' . $tarr['table'], $tarr['table'])){
 		#	trigger_error('Failed to fill update database table');
 		#	unlink(DOC_ROOT . $this->processFileDir . $basename . DS . $entryFilename);
-		#	continue 2;
+		#	return false;
 		#}
 
 		$this->storage->loadFromXML(DOC_ROOT . $this->processFileDir . $basename . DS . $entryFilename, 'update_' . $tarr['table'], $tarr['rows_identified']);
