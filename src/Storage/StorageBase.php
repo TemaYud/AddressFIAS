@@ -15,4 +15,12 @@ abstract class StorageBase {
 
 	abstract public function loadFromXML($file, $tbl, $rows_id);
 
+	public function ping(){
+		return true;
+	}
+
+	public function reconnect(){
+		return true;
+	}
+
 }

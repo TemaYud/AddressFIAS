@@ -35,8 +35,8 @@ abstract class EntriesManagerBase {
 			throw new EntriesManagerException('Error getting entries from EntriesStorage.');
 		}
 
-		$entriesProcessors = $this->getEntryHandlers();
-		foreach ($entriesProcessors as $handler){
+		$entryHandlers = $this->getEntryHandlers();
+		foreach ($entryHandlers as $handler){
 			$mask = $handler::getFileMask();
 			$fs = array_filter($entries, function($efile) use($mask){
 				return (preg_match($mask, $efile) > 0);

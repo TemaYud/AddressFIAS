@@ -29,6 +29,10 @@ abstract class HandlerBase {
 		$this->updateTableName = $this->getUpdateTablePrefix() . $this->storageTableName . $this->getUpdateTablePostfix();
 	}
 
+	abstract protected function getStorageTable(): string;
+
+	abstract protected function getXmlRowsIdentifier(): string;
+
 	public function setFullUpdate(bool $isFullUpdate){
 		$this->isFullUpdate = $isFullUpdate;
 	}
@@ -36,10 +40,6 @@ abstract class HandlerBase {
 	public function isFullUpdate(){
 		return $this->isFullUpdate;
 	}
-
-	abstract protected function getStorageTable(): string;
-
-	abstract protected function getXmlRowsIdentifier(): string;
 
 	protected function getUpdateTablePrefix(): string {
 		return 'update_';
@@ -50,15 +50,12 @@ abstract class HandlerBase {
 	}
 
 	public function start(){
+		var_dump(get_called_class());
 		$this->createUpdateTable();
-		$this->loadFiles();
+		$this->loadUpdateFiles();
 		$this->replaceUpdatedData();
 
 		
-
-		/*if (!\Page::$DB->ping()){
-			\Page::$DB->reconnect();
-		}*/
 
 		/*if (!empty($tarr['callback'])){
 			call_user_func($tarr['callback'], $tarr['table']);
@@ -68,6 +65,10 @@ abstract class HandlerBase {
 	}
 
 	protected function createUpdateTable(){
+		if (!$this->storage->ping()){
+			$this->storage->reconnect();
+		}
+
 		if (!($r = $this->storage->createTableLike($this->storageTableName, $this->updateTableName))){
 			throw new EntriesHandlerException('Failed to create update database table');
 		}
@@ -82,16 +83,28 @@ abstract class HandlerBase {
 	}
 
 	protected function dropUpdateTable(){
+		if (!$this->storage->ping()){
+			$this->storage->reconnect();
+		}
+
 		$this->storage->dropTable($this->updateTableName);
 	}
 
-	protected function loadFiles(){
+	protected function loadUpdateFiles(){
 		foreach ($this->files as $file){
+			if (!$this->storage->ping()){
+				$this->storage->reconnect();
+			}
+
 			$this->storage->loadFromXML($file, $this->updateTableName, $this->getXmlRowsIdentifier());
 		}
 	}
 
 	protected function replaceUpdatedData(){
+		if (!$this->storage->ping()){
+			$this->storage->reconnect();
+		}
+
 		#if (!$this->storage->replaceUpdatedData($this->storageTableName)){
 		#	throw new EntriesHandlerException('Failed to replace updated data');
 		#}
