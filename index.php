@@ -25,11 +25,6 @@ $updater->processDir(__DIR__ . '/tmp/process_dir_20220719_gar_delta_xml', $manag
 //$updater->upgradeDelta($storage);
 
 /*
-$entryManager = \AddressFIAS\Updater\EntriesManager\Entries\Gar\ObjTypes('path/to/file.XML', $storage);
-$entryManager->start();
-*/
-
-/*
 $addrObj = new AddrObj([
 	__DIR__ . '/tmp/process_dir_20220719_gar_delta_xml/01/AS_ADDR_OBJ_20220718_1f05d838-4b37-49c3-ab75-d10d316cd146.XML',
 	__DIR__ . '/tmp/process_dir_20220719_gar_delta_xml/02/AS_ADDR_OBJ_20220718_de5f06e1-695d-4bb1-a1bb-d5d24463aa5b.XML',
