@@ -109,8 +109,8 @@ class Updater {
 
 		$filepath = $this->downloadArchive($farr['GarXMLFullURL'], $farr['VersionId']);
 
-			$manager = new EntriesManagerGar($storage);
-			#$manager->setFullUpdate(true);
+		$manager = new EntriesManagerGar($storage);
+		$manager->setFullUpdate(true);
 
 		if (!$this->processArchive($filepath, $manager)){
 			return false;

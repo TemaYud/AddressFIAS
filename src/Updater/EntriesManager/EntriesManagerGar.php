@@ -1,24 +1,20 @@
 <?php
 namespace AddressFIAS\Updater\EntriesManager;
 
+use AddressFIAS\Updater\EntriesManager\Handlers\HandlerBase;
+
 class EntriesManagerGar extends EntriesManagerBase {
 
-	protected function getEntriesProcessors(): array {
+	protected function getEntryHandlers(): array {
 		return [
-			'#^AS_ADDR_OBJ_TYPES_[0-9]+_[0-9a-f\\-]+\\.XML$#ui' => Entries\Gar\ObjTypes::class,
-			'#^AS_OBJECT_LEVELS_[0-9]+_[0-9a-f\\-]+\\.XML$#ui' => Entries\Gar\ObjectLevels::class,
-			'#^AS_HOUSE_TYPES_[0-9]+_[0-9a-f\\-]+\\.XML$#ui' => Entries\Gar\HouseTypes::class,
-			'#^AS_ADDHOUSE_TYPES_[0-9]+_[0-9a-f\\-]+\\.XML$#ui' => Entries\Gar\AddhouseTypes::class,
-
-			'#^[0-9]+/AS_ADDR_OBJ_[0-9]+_[0-9a-f\\-]+\\.XML$#ui' => Entries\Gar\AddrObj::class,
-			'#^[0-9]+/AS_HOUSES_[0-9]+_[0-9a-f\\-]+\\.XML$#ui' => Entries\Gar\House::class,
+			Handlers\Gar\AddrObjTypes::class,
+			Handlers\Gar\ObjectLevels::class,
+			Handlers\Gar\AddrObj::class,
+			Handlers\Gar\House::class,
+			//Handlers\Gar\Socrbase::class,
+			Handlers\Gar\HouseTypes::class,
+			Handlers\Gar\AddhouseTypes::class,
 		];
-	}
-
-	protected function startEntryProcessor(EntryBase $entryProcessor){
-		$entryProcessor->setFullUpdate(true);
-
-		return $entryProcessor->start();
 	}
 
 }

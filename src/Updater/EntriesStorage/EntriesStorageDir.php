@@ -14,17 +14,20 @@ class EntriesStorageDir extends EntriesStorageBase {
 	}
 
 	public function getEntries(): array {
-		$result = [];
+		$entries = [];
 		foreach ($this->iterator as $item){
 			if (!$item->isDir() && in_array(strtolower($item->getExtension()), $this->fileExtensions)){
-				$result[] = $item->getPathname();
+				$entries[] = $this->iterator->getSubPathName();
 			}
 		}
-
-		return $result;
+		return $entries;
 	}
 
 	public function toProcess(array $entries): array {
+		array_walk($entries, static function(&$f, $k, $d){
+			$f = realpath($d . DIRECTORY_SEPARATOR . $f);
+		}, $this->filepath);
+
 		return $entries;
 	}
 
