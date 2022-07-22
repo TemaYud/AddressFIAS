@@ -3,9 +3,6 @@ namespace AddressFIAS\Storage;
 
 class StorageMysql extends StorageBase {
 
-	public function __construct(){
-	}
-
 	public function createTableLike($tbl_like, $tbl){
 		$sql = "CREATE TABLE IF NOT EXISTS `" . $tbl . "` LIKE `" . $tbl_like . "`;";
 		var_dump($sql);
@@ -48,6 +45,10 @@ class StorageMysql extends StorageBase {
 
 	public function reconnect(){
 		return true;
+	}
+
+	public function isLoadXmlLocalInfile(){
+		return false;
 	}
 
 }

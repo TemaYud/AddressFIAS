@@ -50,12 +50,11 @@ abstract class HandlerBase {
 	}
 
 	public function start(){
-		var_dump(get_called_class());
 		$this->createUpdateTable();
 		$this->loadUpdateFiles();
 		$this->replaceUpdatedData();
 
-		
+
 
 		/*if (!empty($tarr['callback'])){
 			call_user_func($tarr['callback'], $tarr['table']);

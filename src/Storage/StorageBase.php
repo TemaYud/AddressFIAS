@@ -1,9 +1,16 @@
 <?php
 namespace AddressFIAS\Storage;
 
+use AddressFIAS\Storage\Drivers\DriverInterface;
 use AddressFIAS\Exception\StorageException;
 
 abstract class StorageBase {
+
+	protected $driver;
+
+	public function __construct(DriverInterface $driver){
+		$this->driver = $driver;
+	}
 
 	abstract public function createTableLike($tbl, $tbl_like);
 
@@ -21,6 +28,10 @@ abstract class StorageBase {
 
 	public function reconnect(){
 		return true;
+	}
+
+	public function isLoadXmlLocalInfile(){
+		return false;
 	}
 
 }

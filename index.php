@@ -6,20 +6,30 @@ ini_set('log_errors', true);
 
 require_once('vendor' . DIRECTORY_SEPARATOR . 'autoload.php');
 
+
 use AddressFIAS\Updater;
 use AddressFIAS\Updater\EntriesManager\EntriesManagerGar;
 use AddressFIAS\Updater\EntriesManager\Handlers\Gar\AddrObj as AddrObjHandler;
 use AddressFIAS\Storage\StorageMysql;
 
+use AddressFIAS\Storage\Drivers\DriverMysql;
+
+$dbh = new DriverMysql('mysql:dbname=address;host=127.0.0.1', 'root', 'root', [
+	\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8;',
+	\PDO::MYSQL_ATTR_LOCAL_INFILE => true,
+]);
+var_dump($dbh->getAttribute(\PDO::MYSQL_ATTR_LOCAL_INFILE));
+
+
 $updater = new Updater();
-$storage = new StorageMysql();
+$storage = new StorageMysql($dbh);
 
 $manager = new EntriesManagerGar($storage);
-#$manager->setFullUpdate(true);
+$manager->setFullUpdate(true);
 
 //$updater->processArchive(__DIR__ . '/tmp/20220715_gar_xml.zip', $manager);
 
-$updater->processDir(__DIR__ . '/tmp/process_dir_20220719_gar_delta_xml', $manager);
+$updater->processDir(__DIR__ . '/tmp/20220715_gar_xml', $manager);
 
 //$updater->setProcessFileDir(__DIR__ . DIRECTORY_SEPARATOR . 'tmp');
 //$updater->upgradeDelta($storage);

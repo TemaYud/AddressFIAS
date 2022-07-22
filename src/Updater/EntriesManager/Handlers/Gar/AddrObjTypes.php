@@ -10,7 +10,7 @@ class AddrObjTypes extends HandlerBase {
 	}
 
 	protected function getStorageTable(): string{
-		return 'ADDR_OBJ_TYPES';
+		return 'addr_obj_types';
 	}
 
 	protected function getXmlRowsIdentifier(): string{
