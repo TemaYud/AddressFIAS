@@ -12,26 +12,26 @@ abstract class StorageBase {
 		$this->driver = $driver;
 	}
 
-	abstract public function createTableLike($tbl, $tbl_like);
-
-	abstract public function dropTable($tbl);
-
-	abstract public function truncateTable($tbl);
-
-	abstract public function fillTableFrom($tbl, $tbl_from);
-
-	abstract public function loadFromXML($file, $tbl, $rows_id);
-
-	public function ping(){
-		return true;
+	public function driver(): DriverInterface {
+		return $this->driver;
 	}
 
-	public function reconnect(){
-		return true;
+	public function checkConnection(){
+		if (!$this->driver->ping()){
+			$this->driver = $this->driver->reconnect();
+		}
 	}
 
-	public function isLoadXmlLocalInfile(){
-		return false;
-	}
+	//abstract public function createTableLike(string $tbl, string $tbl_like): bool;
+
+	//abstract public function dropTable(string $tbl): bool;
+
+	abstract public function truncateTable(string $tbl): bool;
+
+	//abstract public function fillTableFrom(string $tbl, string $tbl_from): int;
+
+	abstract public function loadFromXMLFile(string $file, string $tbl, string $rows_id): int;
+
+	//abstract public function replaceDataFrom(string $tbl, string $tbl_from): int;
 
 }

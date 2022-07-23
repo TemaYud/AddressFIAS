@@ -7,4 +7,10 @@ interface DriverInterface {
 
 	public function quote(string $string);
 
+	public function ping(): bool;
+
+	public function reconnect(): DriverInterface;
+
+	public function allowLoadXmlLocalInfile(): bool;
+
 }

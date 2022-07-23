@@ -50,62 +50,63 @@ abstract class HandlerBase {
 	}
 
 	public function start(){
-		$this->createUpdateTable();
+		//$this->createUpdateTable();
 		$this->loadUpdateFiles();
 		$this->replaceUpdatedData();
 
-
-
-		/*if (!empty($tarr['callback'])){
-			call_user_func($tarr['callback'], $tarr['table']);
-		}*/
-
-		$this->dropUpdateTable();
+		//$this->dropUpdateTable();
 	}
 
-	protected function createUpdateTable(){
-		if (!$this->storage->ping()){
-			$this->storage->reconnect();
-		}
+	/*protected function createUpdateTable(){
+		$this->storage->checkConnection();
 
-		if (!($r = $this->storage->createTableLike($this->storageTableName, $this->updateTableName))){
-			throw new EntriesHandlerException('Failed to create update database table');
+		if (!$this->storage->createTableLike($this->storageTableName, $this->updateTableName)){
+			throw new EntriesHandlerException('Failed to create update database table \'' . $this->updateTableName . '\'.');
 		}
 
 		if (!$this->storage->truncateTable($this->updateTableName)){
-			throw new EntriesHandlerException('Failed to truncate update database table');
+			throw new EntriesHandlerException('Failed to truncate update database table \'' . $this->updateTableName . '\'.');
 		}
 
-		/*if (!$this->storage->fillTableFrom($this->updateTableName, $this->storageTableName)){
-			throw new EntriesHandlerException('Failed to fill update database table');
+		/*if (!$this->isFullUpdate){
+			if (!$this->storage->fillTableFrom($this->updateTableName, $this->storageTableName)){
+				throw new EntriesHandlerException('Failed to fill update database table \'' . $this->updateTableName . '\'.');
+			}
 		}*/
-	}
+	//}
 
-	protected function dropUpdateTable(){
-		if (!$this->storage->ping()){
-			$this->storage->reconnect();
-		}
+	/*protected function dropUpdateTable(){
+		$this->storage->checkConnection();
 
 		$this->storage->dropTable($this->updateTableName);
-	}
+	}*/
 
 	protected function loadUpdateFiles(){
 		foreach ($this->files as $file){
-			if (!$this->storage->ping()){
-				$this->storage->reconnect();
-			}
+			$this->storage->checkConnection();
 
-			$this->storage->loadFromXML($file, $this->updateTableName, $this->getXmlRowsIdentifier());
+			if (!$this->storage->loadFromXMLFile($file, $this->updateTableName, $this->getXmlRowsIdentifier())){
+				//var_dump($this->storage->driver()->errorInfo());
+				throw new EntriesHandlerException('XML-file loading error \'' . $file . '\'.');
+			}
 		}
 	}
 
 	protected function replaceUpdatedData(){
-		if (!$this->storage->ping()){
-			$this->storage->reconnect();
+		$this->storage->checkConnection();
+
+		if (!$this->isFullUpdate){
+			if (!$this->storage->truncateTable($this->storageTableName)){
+				throw new EntriesHandlerException('Failed to truncate database table \'' . $this->storageTableName . '\'.');
+			}
 		}
 
-		#if (!$this->storage->replaceUpdatedData($this->storageTableName)){
-		#	throw new EntriesHandlerException('Failed to replace updated data');
+		/*if (!$this->storage->replaceDataFrom($this->storageTableName, $this->updateTableName)){
+			throw new EntriesHandlerException('Failed to replace updated data \'' . $this->storageTableName . '\'.');
+		}*/
+
+		#if (!empty($tarr['callback'])){
+		#	call_user_func($tarr['callback'], $tarr['table']);
 		#}
 	}
 

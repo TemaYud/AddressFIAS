@@ -31,20 +31,12 @@ class StorageMysql extends StorageBase {
 		#return \Page::$DB->exec($sql);
 	}
 
-	public function loadFromXML($file, $tbl, $rows_id){
+	public function loadFromXMLFile($file, $tbl, $rows_id){
 		//$sql = "LOAD XML LOCAL INFILE '" . \Page::$DB->escape($file) . "' REPLACE INTO TABLE `" . $tbl . "` ROWS IDENTIFIED BY '<" . \Page::$DB->escape($rows_id) . ">';";
 		$sql = "LOAD XML LOCAL INFILE '" . $file . "' REPLACE INTO TABLE `" . $tbl . "` ROWS IDENTIFIED BY '<" . $rows_id . ">';";
 		var_dump($sql);
 		return true;
 		#return \Page::$DB->exec($sql);
-	}
-
-	public function ping(){
-		return true;
-	}
-
-	public function reconnect(){
-		return true;
 	}
 
 }

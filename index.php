@@ -18,7 +18,6 @@ $dbh = new DriverMysql('mysql:dbname=address;host=127.0.0.1', 'root', 'root', [
 	\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8;',
 	\PDO::MYSQL_ATTR_LOCAL_INFILE => true,
 ]);
-var_dump($dbh->getAttribute(\PDO::MYSQL_ATTR_LOCAL_INFILE));
 
 
 $updater = new Updater();
