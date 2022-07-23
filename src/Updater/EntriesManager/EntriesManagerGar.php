@@ -7,12 +7,12 @@ class EntriesManagerGar extends EntriesManagerBase {
 
 	protected function getEntryHandlers(): array {
 		return [
-			Handlers\Gar\AddrObjTypes::class,
-			/*Handlers\Gar\ObjectLevels::class,
-			Handlers\Gar\AddrObj::class,
+			#Handlers\Gar\AddrObjTypes::class,
+			#Handlers\Gar\ObjectLevels::class,
+			#Handlers\Gar\AddrObj::class,
 			Handlers\Gar\House::class,
 			Handlers\Gar\HouseTypes::class,
-			Handlers\Gar\AddhouseTypes::class,*/
+			Handlers\Gar\AddhouseTypes::class,
 		];
 	}
 

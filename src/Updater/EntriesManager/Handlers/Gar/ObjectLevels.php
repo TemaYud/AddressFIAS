@@ -10,7 +10,7 @@ class ObjectLevels extends HandlerBase {
 	}
 
 	protected function getStorageTable(): string{
-		return 'OBJECT_LEVELS';
+		return 'fias_object_levels';
 	}
 
 	protected function getXmlRowsIdentifier(): string{

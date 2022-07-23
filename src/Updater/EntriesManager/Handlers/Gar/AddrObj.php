@@ -18,7 +18,7 @@ class AddrObj extends HandlerBase {
 	}
 
 	protected function getStorageTable(): string{
-		return 'ADDR_OBJ';
+		return 'fias_addrobj';
 	}
 
 	protected function getXmlRowsIdentifier(): string{

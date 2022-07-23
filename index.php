@@ -7,6 +7,9 @@ ini_set('log_errors', true);
 require_once('vendor' . DIRECTORY_SEPARATOR . 'autoload.php');
 
 
+set_time_limit(0);
+
+
 use AddressFIAS\Updater;
 use AddressFIAS\Updater\EntriesManager\EntriesManagerGar;
 use AddressFIAS\Updater\EntriesManager\Handlers\Gar\AddrObj as AddrObjHandler;
